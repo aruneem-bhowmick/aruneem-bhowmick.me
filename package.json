@@ -30,5 +30,8 @@
     "shadcn": "^4.14.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "sharp": "^0.35.0"
   }
 }
