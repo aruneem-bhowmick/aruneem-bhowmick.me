@@ -7,8 +7,40 @@ import { VIGNETTE_RADIUS_VMIN } from "@/lib/layout";
 const VIGNETTE_MASK = `radial-gradient(circle ${VIGNETTE_RADIUS_VMIN}vmin at center, black 0%, black 30%, transparent 100%)`;
 const FLASHLIGHT_CURSOR = 'url("/cursor-flashlight.svg") 7 7, auto';
 
+// Warmth is a clamped (never wraps) -1..1 dial: -1 is the coolest the
+// light can go, 1 the warmest, 0 is the original neutral white it starts
+// at. Rather than compositing a colored layer over the flashlight (which
+// blends against whatever's behind it and washes the dots into a solid
+// disc), warmth is applied as a per-channel color bias directly on the
+// dots' own pixels via feColorMatrix. Transparent gaps have alpha 0, so a
+// channel bias can't paint over them — only pixels that already have a lit
+// dot shift color, keeping the dotted texture intact.
+const WARMTH_MIN = -1;
+const WARMTH_MAX = 1;
+const WARMTH_SCROLL_SENSITIVITY = 0.0018;
+const MAX_RED_BIAS = 0.16;
+const MAX_GREEN_BIAS = 0.03;
+const MAX_BLUE_BIAS = 0.2;
+
+function colorMatrixForWarmth(warmth: number): string {
+  const r = warmth * MAX_RED_BIAS;
+  const g = warmth * MAX_GREEN_BIAS;
+  const b = -warmth * MAX_BLUE_BIAS;
+  return `1 0 0 0 ${r}  0 1 0 0 ${g}  0 0 1 0 ${b}  0 0 0 1 0`;
+}
+
 export function BackgroundGlow() {
   const spotlightRef = useRef<HTMLDivElement>(null);
+  const colorMatrixRef = useRef<SVGFEColorMatrixElement>(null);
+  const warmthRef = useRef(0);
+
+  function handleWheel(e: React.WheelEvent<HTMLDivElement>) {
+    warmthRef.current = Math.min(
+      WARMTH_MAX,
+      Math.max(WARMTH_MIN, warmthRef.current - e.deltaY * WARMTH_SCROLL_SENSITIVITY),
+    );
+    colorMatrixRef.current?.setAttribute("values", colorMatrixForWarmth(warmthRef.current));
+  }
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -34,6 +66,7 @@ export function BackgroundGlow() {
     <div
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
+      onWheel={handleWheel}
       className="absolute inset-0 select-none"
       style={{
         maskImage: VIGNETTE_MASK,
@@ -53,6 +86,11 @@ export function BackgroundGlow() {
             <feComponentTransfer>
               <feFuncA type="linear" slope="9" intercept="0" />
             </feComponentTransfer>
+          </filter>
+          {/* Shifts each dot's own RGB by a warmth-driven bias. Alpha is
+              untouched, so gaps (alpha 0) can't be tinted into a solid fill. */}
+          <filter id="warmth-tint" colorInterpolationFilters="sRGB">
+            <feColorMatrix ref={colorMatrixRef} type="matrix" values={colorMatrixForWarmth(0)} />
           </filter>
         </defs>
       </svg>
@@ -80,7 +118,7 @@ export function BackgroundGlow() {
           alt=""
           fill
           className="pointer-events-none object-contain"
-          style={{ filter: "url(#dot-alpha-boost) brightness(1.3)" }}
+          style={{ filter: "url(#dot-alpha-boost) brightness(1.3) url(#warmth-tint)" }}
         />
       </div>
     </div>
