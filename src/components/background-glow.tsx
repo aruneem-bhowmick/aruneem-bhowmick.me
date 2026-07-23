@@ -32,6 +32,7 @@ export function BackgroundGlow() {
         WebkitMaskImage: VIGNETTE_MASK,
         maskRepeat: "no-repeat",
         WebkitMaskRepeat: "no-repeat",
+        cursor: 'url("/cursor-flashlight.svg") 7 7, auto',
       }}
     >
       {/* The dots in glow.png are near-white already; they read as dim
