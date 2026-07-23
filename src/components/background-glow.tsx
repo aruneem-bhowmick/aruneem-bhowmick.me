@@ -34,12 +34,13 @@ export function BackgroundGlow() {
     <div
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
-      className="absolute inset-0"
+      className="absolute inset-0 select-none"
       style={{
         maskImage: VIGNETTE_MASK,
         WebkitMaskImage: VIGNETTE_MASK,
         maskRepeat: "no-repeat",
         WebkitMaskRepeat: "no-repeat",
+        WebkitTapHighlightColor: "transparent",
       }}
     >
       {/* The dots in glow.png are near-white already; they read as dim
