@@ -5,21 +5,29 @@ import { useRef } from "react";
 import { VIGNETTE_RADIUS_VMIN } from "@/lib/layout";
 
 const VIGNETTE_MASK = `radial-gradient(circle ${VIGNETTE_RADIUS_VMIN}vmin at center, black 0%, black 30%, transparent 100%)`;
+const FLASHLIGHT_CURSOR = 'url("/cursor-flashlight.svg") 7 7, auto';
 
 export function BackgroundGlow() {
   const spotlightRef = useRef<HTMLDivElement>(null);
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    spotlightRef.current?.style.setProperty("--spot-x", `${x}%`);
-    spotlightRef.current?.style.setProperty("--spot-y", `${y}%`);
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    spotlightRef.current?.style.setProperty("--spot-x", `${(x / rect.width) * 100}%`);
+    spotlightRef.current?.style.setProperty("--spot-y", `${(y / rect.height) * 100}%`);
+
+    const vmin = Math.min(rect.width, rect.height) / 100;
+    const radiusPx = VIGNETTE_RADIUS_VMIN * vmin;
+    const distFromCenter = Math.hypot(x - rect.width / 2, y - rect.height / 2);
+    e.currentTarget.style.cursor =
+      distFromCenter <= radiusPx ? FLASHLIGHT_CURSOR : "auto";
   }
 
-  function handlePointerLeave() {
+  function handlePointerLeave(e: React.PointerEvent<HTMLDivElement>) {
     spotlightRef.current?.style.setProperty("--spot-x", "-100%");
     spotlightRef.current?.style.setProperty("--spot-y", "-100%");
+    e.currentTarget.style.cursor = "auto";
   }
 
   return (
@@ -32,7 +40,6 @@ export function BackgroundGlow() {
         WebkitMaskImage: VIGNETTE_MASK,
         maskRepeat: "no-repeat",
         WebkitMaskRepeat: "no-repeat",
-        cursor: 'url("/cursor-flashlight.svg") 7 7, auto',
       }}
     >
       {/* The dots in glow.png are near-white already; they read as dim
