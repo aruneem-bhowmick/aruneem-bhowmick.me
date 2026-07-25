@@ -1,6 +1,6 @@
 "use client";
 
-import { IconDots, IconX } from "@tabler/icons-react";
+import { IconDots } from "@tabler/icons-react";
 import {
   AnimatePresence,
   motion,
@@ -84,8 +84,8 @@ export function RadialDock() {
       className="pointer-events-none fixed inset-0 z-30"
     >
       <motion.button
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close links" : "Open links"}
+        onClick={() => setOpen(true)}
+        aria-label="Open links"
         aria-expanded={open}
         initial={false}
         animate={{ y: open ? `${TRIGGER_OPEN_OFFSET_VMIN}vmin` : "0vmin" }}
@@ -93,19 +93,8 @@ export function RadialDock() {
         className="pointer-events-auto absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-neutral-400 transition-colors hover:text-neutral-100"
         style={anchorStyle}
       >
-        <AnimatePresence mode="wait" initial={false}>
-          {open ? (
-            <motion.span
-              key="close"
-              initial={{ opacity: 0, rotate: -45 }}
-              animate={{ opacity: 1, rotate: 0 }}
-              exit={{ opacity: 0, rotate: 45 }}
-              transition={{ duration: 0.2 }}
-              className="flex"
-            >
-              <IconX className="h-6 w-6" />
-            </motion.span>
-          ) : (
+        <AnimatePresence>
+          {!open && (
             <motion.span
               key="dots"
               initial={{ opacity: 0 }}
