@@ -5,16 +5,25 @@ import {
   AnimatePresence,
   motion,
   MotionValue,
+  useMotionTemplate,
   useMotionValue,
   useSpring,
   useTransform,
 } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { siteLinks } from "@/config/site";
+import { useWarmth } from "@/components/warmth-provider";
 import { VIGNETTE_RADIUS_VMIN } from "@/lib/layout";
 
 const START_ANGLE = 60;
 const END_ANGLE = 120;
+
+// Mirrors the flashlight's warm/cool spectrum so the dock icons pick up a
+// faint ambient tint of whatever glow color the flashlight currently has.
+const COOL_GLOW = "rgba(125, 179, 255, 0.65)";
+const NEUTRAL_GLOW = "rgba(255, 255, 255, 0.35)";
+const WARM_GLOW = "rgba(255, 173, 102, 0.65)";
+const HOVER_GLOW = "rgba(255, 255, 255, 0.55)";
 
 // When open, the trigger nudges down below the central icon's position -
 // with an odd number of icons spread symmetrically around 90 degrees, the
@@ -149,7 +158,8 @@ function RadialIcon({
   delay: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [hovered, setHovered] = useState(false);
+  const hovered = useMotionValue(0);
+  const warmth = useWarmth();
 
   const distance = useTransform([mouseX, mouseY], (latest) => {
     const [latestX, latestY] = latest as number[];
@@ -170,6 +180,16 @@ function RadialIcon({
     stiffness: 150,
     damping: 12,
   });
+
+  const glowColor = useTransform(
+    warmth,
+    [-1, 0, 1],
+    [COOL_GLOW, NEUTRAL_GLOW, WARM_GLOW],
+  );
+  const hoverGlow = useTransform(hovered, (isHovered) =>
+    isHovered ? `drop-shadow(0 0 10px ${HOVER_GLOW})` : "",
+  );
+  const filter = useMotionTemplate`drop-shadow(0 0 6px ${glowColor}) ${hoverGlow}`;
 
   return (
     <motion.a
@@ -192,13 +212,11 @@ function RadialIcon({
         style={{
           scale,
           opacity: glow,
-          filter: hovered
-            ? "drop-shadow(0 0 10px rgba(255,255,255,0.55))"
-            : "none",
+          filter,
         }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        className="relative flex h-6 w-6 items-center justify-center text-neutral-300 transition-[filter] duration-200"
+        onMouseEnter={() => hovered.set(1)}
+        onMouseLeave={() => hovered.set(0)}
+        className="relative flex h-6 w-6 items-center justify-center text-neutral-300"
       >
         {item.icon}
       </motion.div>

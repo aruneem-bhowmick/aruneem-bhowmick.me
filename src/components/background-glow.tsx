@@ -1,7 +1,9 @@
 "use client";
 
+import { useMotionValueEvent } from "motion/react";
 import Image from "next/image";
 import { useRef } from "react";
+import { useWarmth } from "@/components/warmth-provider";
 import { VIGNETTE_RADIUS_VMIN } from "@/lib/layout";
 
 const VIGNETTE_MASK = `radial-gradient(circle ${VIGNETTE_RADIUS_VMIN}vmin at center, black 0%, black 30%, transparent 100%)`;
@@ -32,14 +34,18 @@ function colorMatrixForWarmth(warmth: number): string {
 export function BackgroundGlow() {
   const spotlightRef = useRef<HTMLDivElement>(null);
   const colorMatrixRef = useRef<SVGFEColorMatrixElement>(null);
-  const warmthRef = useRef(0);
+  const warmth = useWarmth();
+
+  useMotionValueEvent(warmth, "change", (latest) => {
+    colorMatrixRef.current?.setAttribute("values", colorMatrixForWarmth(latest));
+  });
 
   function handleWheel(e: React.WheelEvent<HTMLDivElement>) {
-    warmthRef.current = Math.min(
+    const next = Math.min(
       WARMTH_MAX,
-      Math.max(WARMTH_MIN, warmthRef.current - e.deltaY * WARMTH_SCROLL_SENSITIVITY),
+      Math.max(WARMTH_MIN, warmth.get() - e.deltaY * WARMTH_SCROLL_SENSITIVITY),
     );
-    colorMatrixRef.current?.setAttribute("values", colorMatrixForWarmth(warmthRef.current));
+    warmth.set(next);
   }
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
