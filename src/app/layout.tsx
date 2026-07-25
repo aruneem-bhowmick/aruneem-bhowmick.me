@@ -21,6 +21,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
+  verification: { google: "Ijf5w-cdn8Ep0inFZQ9tRErEXbIITCZM4OGnsSpQblQ" },
 };
 
 export default function RootLayout({
