@@ -7,7 +7,7 @@ import { useWarmth } from "@/components/warmth-provider";
 import { VIGNETTE_RADIUS_VMIN } from "@/lib/layout";
 
 const VIGNETTE_MASK = `radial-gradient(circle ${VIGNETTE_RADIUS_VMIN}vmin at center, black 0%, black 30%, transparent 100%)`;
-const FLASHLIGHT_CURSOR = 'url("/cursor-flashlight.svg") 7 7, auto';
+const FLASHLIGHT_CURSOR = 'url("/cursor-flashlight.svg") 9 10, auto';
 
 // Warmth is a clamped (never wraps) -1..1 dial: -1 is the coolest the
 // light can go, 1 the warmest, 0 is the original neutral white it starts
